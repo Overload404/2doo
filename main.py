@@ -93,7 +93,7 @@ def to_do_print(username):
             print(f"{item_id} - {item} - {status}")
     else:
         print("Nothing to do. Add some items.")
-    print("##########################################")
+    print("#"*40)
 
 
 # Add items
@@ -192,8 +192,7 @@ def to_do_loop(username):
 
 def main():
     os.system('cls')
-    print("Welcome to 2doo")
-    print()
+    print("Welcome to 2doo\n")
     userlist = load_create_user_json()
     while not user_selected:
         user_select = select_user(userlist)
