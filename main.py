@@ -5,7 +5,8 @@ import os
 # variables
 main_dir = "./"
 user_selected = False
-msg = ""
+todo_msg = ""
+user_msg = ""
 
 
 # check if user file exists
@@ -26,26 +27,31 @@ def create_user(userlist, path="userlist.json", username="Default"):
     fullpath = f"{main_dir}{path}"
     with open(fullpath, "w") as file:
         new_user_id = int(list(userlist.keys())[-1]) + 1
-        userlist[new_user_id] = username
+        userlist[str(new_user_id)] = username
         json.dump(userlist, file, indent=4)
+    return new_user_id, userlist
 
 
 # Select a user
 def select_user(userlist):
+    os.system('cls')
     global user_selected
-    print("Username options: ")
+    global user_msg
+    print("Select your user or create a new one: ")
     print("N - Create new user")
     for i in userlist.keys():
         print(f"{i} - {userlist[i]}")
-    user_select = input("Select from above: ")
-    if user_select == "N":
+    user_select = input(user_msg + "Select from above: ")
+    if user_select.isalpha() and user_select.lower() == "n":
         username = ask_username()
-        create_user(username=username, userlist=userlist)
-    elif user_select not in userlist.keys() and user_select != "N":
-        print("Not an option. Please select from above: ")
-        user_select = input("Select from above: ")
-    else:
+        user_select, userlist = create_user(username=username, userlist=userlist)
+        user_msg = "User created. "
+    elif (user_select.isalpha() and user_select.lower() != "n") or (user_select.isnumeric() and user_select not in userlist.keys()):
+        user_msg = "Not an option. "
+    elif user_select in userlist.keys():
         user_selected = True
+    else:
+        pass
     return user_select
 
 
@@ -92,7 +98,7 @@ def to_do_print(username):
 
 # Add items
 def to_do_add(username):
-    global msg
+    global todo_msg
     to_do_list = load_create_todo_json(username)
     if len(to_do_list) == 0:
         item_id = 0
@@ -103,58 +109,59 @@ def to_do_add(username):
     entry = {"item_id": item_id, "status": status, "item": item}
     to_do_list.append(entry)
     save_to_do_changes(username, to_do_list)
-    msg = "Item created."
+    todo_msg = "Item created."
 
 
 # Remove items
 def to_do_remove(username):
-    global msg
+    global todo_msg
+
     to_do_list = load_create_todo_json(username)
     
     if len(to_do_list) == 0:
-        msg = "Nothing to remove. The list is empty. "
+        todo_msg = "Nothing to remove. The list is empty. "
     else:
         item_id = input("Enter an ID to remove: ")
         existing_ids = []
         for i in to_do_list:
             existing_ids.append(i["item_id"])
         if not item_id.isnumeric():
-            msg = "Item ID must be a number."
+            todo_msg = "Item ID must be a number."
         elif item_id.isnumeric() and int(item_id) not in existing_ids:
-            msg = "There's no item with this ID."
+            todo_msg = "There's no item with this ID."
         elif item_id.isnumeric() and int(item_id) in existing_ids:
             for i in to_do_list:
                 if i["item_id"] == int(item_id):
-                    msg = "Item removed."
+                    todo_msg = "Item removed."
                     to_do_list.remove(i)
                     save_to_do_changes(username, to_do_list)
         else:
-            msg = "There's no item with this ID."
+            todo_msg = "There's no item with this ID."
 
 
 # Mark items as done
 def to_do_mark_done(username):
-    global msg
+    global todo_msg
     to_do_list = load_create_todo_json(username)
     if len(to_do_list) == 0:
-        msg = "Nothing to mark. The list is empty."
+        todo_msg = "Nothing to mark. The list is empty."
     else:
         item_id = input("Enter an ID to mark as done: ")
         existing_ids = []
         for i in to_do_list:
             existing_ids.append(i["item_id"])
         if not item_id.isnumeric():
-            msg = "Item ID must be a number."
+            todo_msg = "Item ID must be a number."
         elif item_id.isnumeric() and int(item_id) not in existing_ids:
-            msg = "There's no item with this ID."
+            todo_msg = "There's no item with this ID."
         elif item_id.isnumeric() and int(item_id) in existing_ids:
             for i in to_do_list:
                 if i["item_id"] == int(item_id):
-                    msg = "Item marked as done."
+                    todo_msg = "Item marked as done."
                     i["status"] = "done"
                     save_to_do_changes(username, to_do_list)
         else:
-            msg = "There's no item with this ID."
+            todo_msg = "There's no item with this ID."
 
     save_to_do_changes(username, to_do_list)
 
@@ -167,7 +174,7 @@ def to_do_replace():
 def to_do_loop(username):
     os.system('cls')
     to_do_print(username)
-    print(msg+" What would you like to do: ")
+    print(todo_msg + " What would you like to do: ")
     print("1 - Add new item \n2 - Mark item as done \n3 - Remove item \n4 - Exit")
     to_do_action = input()
     if to_do_action == "1":
@@ -187,10 +194,10 @@ def main():
     os.system('cls')
     print("Welcome to 2doo")
     print()
+    userlist = load_create_user_json()
     while not user_selected:
-        userlist = load_create_user_json()
         user_select = select_user(userlist)
-        username = userlist[user_select]
+    username = userlist[user_select]
     while user_selected:
         to_do_loop(username)
 
